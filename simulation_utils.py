@@ -13,6 +13,9 @@ plt.style.use('seaborn-darkgrid')
 
 
 def read_network_static_singular(file, comment="%", delim="\t"):
+    '''
+    read network statically (no timestamps)
+    '''
     g = nx.MultiDiGraph() # directed graph with multiple edges
 
     with open(file, "r") as f:
@@ -54,40 +57,11 @@ def get_biggest_strongly_connected_component(g):
     return g.subgraph(biggest_comp_nodes)
 
 
-
-def read_network_temporal(file, comment="%", delim="\t"):
-    time_dict = {} # initialize dictionary
-    nodes = set() # set of network nodes
-
-    # open the file in read mode
-    with open(file, "r") as f:
-
-        # iterate over the lines
-        for l in f:
-            # discard comment lines
-            if l[0] != comment:
-
-                # put edge data into a list of integers
-                data = list(map(int, l.strip().split(delim)))
-
-                # add nodes to the set of nodes
-                nodes.update({data[0], data[1]})
-
-                # new timestamp
-                if not data[3] in time_dict.keys():
-
-                    # add edge as a tuple in the list of the corresponding timestamp
-                    time_dict[data[3]] = [(data[0], data[1])]
-
-                # already present timestamp/key
-                else:
-                    # add new tuple/edge to the list indexed by that timestamp
-                    time_dict[data[3]] += [(data[0], data[1])]
-
-    # returns the dictionary(sorted by timestamps) and the order nodes list
-    return dict(sorted(td.items())), sorted(nodes)
-
 def read_network_temporal_filtered(file, nodes_to_keep, comment="%", delim="\t"):
+    '''
+    Read the network by building a dictionary with timestamps as keys
+    and edges as values
+    '''
     time_dict = {} # initialize dictionary
     nodes = set() # set of network nodes
 
@@ -124,18 +98,16 @@ def read_network_temporal_filtered(file, nodes_to_keep, comment="%", delim="\t")
     return dict(sorted(time_dict.items())), sorted(nodes)
 
 
-
-# immunized_nodes = list of (eventually) immune nodes
-# infection_prob = p parameter of infecting a susceptible node
-# time_dict = dictionary sorted by timestamps
-# seed = initial infected node/nodes
-
 def simulate_SI(time_dict, seed, nodes, n_nodes, infection_prob, immunized_nodes= []):
     """
+    Function performing a SI simulation
+    PARAMETERS:
     immunized_nodes = list of (eventually) immune nodes
     infection_prob = p parameter of infecting a susceptible node
     time_dict = dictionary sorted by timestamps
     seed = initial infected node/nodes
+    nodes = network nodes
+    n_nodes = number of nodes
     """
     # initialize infection_time of each node to 'inf'
     infection_times = {} # dictionary with infection time of each node
@@ -186,8 +158,11 @@ def simulate_SI(time_dict, seed, nodes, n_nodes, infection_prob, immunized_nodes
     return rho_list/n_nodes, infection_times
 
 
-
 def run_multiple_simulations(n_simulations, time_dict, seed, nodes, n_nodes, infection_prob, immunized_nodes= []):
+    '''
+    performs n_simulation SI simulations
+    return the averaged percentage of infected nodes
+    '''
     rho_lists = []
     #rho_list = np.zeros(len(time_dict)) # Initial rho + one rho per timestep
     infection_times_lists = []
@@ -209,10 +184,7 @@ def run_multiple_simulations(n_simulations, time_dict, seed, nodes, n_nodes, inf
         #for j in range(n_nodes):
         #    infection_times[i]
 
-
     return rho_final/n_simulations
-
-
 
 # prevalence plot
 def plot_prevalence(time_list, rho_lists, labels=[]):
@@ -226,17 +198,3 @@ def plot_prevalence(time_list, rho_lists, labels=[]):
         plt.legend(loc='upper left')
         plt.style.use('seaborn-darkgrid')
         plt.tight_layout()
-
-
-def random_group(possible_states, probabilites):
-        """Randomly return a certain state from possible_states
-        based on a set of probabilities of which the sum must be 1
-        """
-        assert sum(probabilites) == 1.0
-
-        choices = []
-
-        for i, st in enumerate(possible_states):
-            choices += [st]*int(probabilites[i] * 10)
-
-        return np.random.choice(choices)
