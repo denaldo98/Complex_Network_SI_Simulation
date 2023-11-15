@@ -1,4 +1,4 @@
-# Complex Networks final project
+# Complex Networks SI Simulation
 
 Project realized for the course *Complex Networks* at *Universitat Politècnica de Catalunya*. 
  
